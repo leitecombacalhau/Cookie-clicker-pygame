@@ -1,0 +1,2 @@
+BAKERY="bakery"
+UPGRADES="upgrades"

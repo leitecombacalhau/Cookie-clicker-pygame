@@ -1,0 +1,44 @@
+{
+  "date": 0,
+  "variables": {
+    "cookies": 0,
+    "cps": 1,
+    "cpc": 1,
+    "cps_multiplier": 1,
+    "cpc_multiplier": 1
+  },
+  "buildings": [{
+    "name": "Cursors",
+    "description": "Cursors to tap for you.",
+    "owned": 0,
+    "cost": 15,
+    "known": false,
+    "boost": 0.1,
+    "type": "cursor"
+  }, {
+    "name": "Grandma",
+    "description": "A nice grandma to bake you more cookies.",
+    "owned": 0,
+    "cost": 100,
+    "known": false,
+    "boost": 1,
+    "type": "grandma"
+  }, {
+    "name": "Farms",
+    "description": "Farm is poop.",
+    "owned": 0,
+    "cost": 1100,
+    "known": false,
+    "boost": 8,
+    "type": "farm"
+  }, {
+    "name": "Mines",
+    "description": "Mine some gold.",
+    "owned": 0,
+    "cost": 1200,
+    "known": false,
+    "boost": 47,
+    "type": "mine"
+  }],
+  "upgrades": []
+}

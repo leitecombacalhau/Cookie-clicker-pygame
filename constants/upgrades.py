@@ -11,7 +11,7 @@ upgrades = [
             "./assets/upgrades/Arrow_Plain_v15.png"
         ),
         "type": types.CLICK,
-        "amount": 5.1,
+        "amount": 1.1,
     },
     {
         "name": "Iron mouse",
@@ -21,7 +21,7 @@ upgrades = [
             "./assets/upgrades/Arrow_Berrylium_v15.png"
         ),
         "type": types.CLICK,
-        "amount": 9.2,
+        "amount": 1.2,
     },
     {
         "name": "Titanium mouse",
@@ -31,7 +31,7 @@ upgrades = [
             "./assets/upgrades/Arrow_Blueberrylium_v15.png"
         ),
         "type": types.CLICK,
-        "amount": 10,
+        "amount": 1.3,
     },
     {
         "name": "Adamantium mouse",
@@ -41,7 +41,7 @@ upgrades = [
             "./assets/upgrades/Arrow_Chalcedhoney_v15.webp"
         ),
         "type": types.CLICK,
-        "amount": 100.1,
+        "amount": 1.4,
     },
     {
         "name": "Unobtainium mouse",
@@ -51,7 +51,7 @@ upgrades = [
             "./assets/upgrades/Arrow_Buttergold_v15.png"
         ),
         "type": types.CLICK,
-        "amount": 500.5,
+        "amount": 2,
     },
     {
         "name": "Eludium mouse",
@@ -61,6 +61,6 @@ upgrades = [
             "./assets/upgrades/Arrow_Sugarmuck_v15.png"
         ),
         "type": types.CLICK,
-        "amount": 100000,
+        "amount": 2.2,
     },
 ]

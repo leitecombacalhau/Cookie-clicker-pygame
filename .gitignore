@@ -1,3 +1,7 @@
 __pycache__
 
 constants/__pycache__
+
+save/__pycache__
+
+*.pyc

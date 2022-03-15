@@ -62,8 +62,7 @@ def renderCookieFont(
 
 # Game Functions
 def formatAmount(amount: int, decimals: int = 1) -> str:
-    res = f"{format(amount, f'.{int(decimals)}f')}"
-    res = res.rstrip("0").rstrip(".") if "." in res else res
+    res = f"{format(amount, '.0f')}"
 
     if amount >= 1000000000000000000000000000:
         n = format(amount / 1000000000000000000000000000, f".{int(decimals)}f")
@@ -158,10 +157,13 @@ class Building(pygame.sprite.Sprite):
 
     def hover_animation(self) -> None:
         if (
-            not self.image == self.building_states["black"]
-            and not self.image == self.building_states["unknown"]
+            self.image != self.building_states["black"]
+            and self.image != self.building_states["unknown"]
         ):
-            if self.rect.collidepoint(pygame.mouse.get_pos()):
+            if (
+                self.rect.collidepoint(pygame.mouse.get_pos())
+                and pygame.mouse.get_focused()
+            ):
                 self.image = self.building_states["highlighted"]
                 detailed_info_rect = pygame.rect.Rect(9, self.index * 63 + 30, 252, 50)
                 pygame.draw.rect(screen, "red", detailed_info_rect)
@@ -177,6 +179,11 @@ class Building(pygame.sprite.Sprite):
         self.isKnown()
         self.hover_animation()
         self.check_input()
+
+
+class GoldenCookie(pygame.sprite.Sprite):
+    def __init__(self, type: str = "frenzy") -> None:
+        super().__init__()
 
 
 # Groups

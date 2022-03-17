@@ -1,0 +1,2 @@
+CFRENZY="clickfrenzy"
+FRENZY="frenzy"

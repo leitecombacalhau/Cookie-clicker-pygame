@@ -4,17 +4,20 @@ from time import time
 
 from pprint import pprint
 
+from random import choice, randint
+
 from constants.upgrades import upgrades
 from constants.builds import builds
+from constants.goldcookies import goldcookies
 
 import constants.modes as modes
 import constants.upgradetypes as utypes
 import constants.buildtypes as btypes
+import constants.gcookietypes as gctypes
 
 from constants.settings import *
 
 from json import dump, loads
-
 
 # SAVE
 with open("./save/save.json", "r") as file:
@@ -54,7 +57,10 @@ currentMode = modes.COOKIE
 
 # Fonts
 def renderCookieFont(
-    text: str, antiAlias: bool, color: tuple | list, size: int | float = 25
+    text: str,
+    antiAlias: bool = True,
+    color: tuple | list = (255, 255, 255),
+    size: int | float = 25,
 ) -> pygame.Surface:
     cookieFont = pygame.font.Font("./assets/font/Kavoon-Regular.ttf", int(size))
     return cookieFont.render(str(text), antiAlias, color).convert_alpha()
@@ -119,6 +125,8 @@ class Building(pygame.sprite.Sprite):
     def __init__(self, building: dict, index: int) -> None:
         super().__init__()
 
+        self.clickState = False
+
         self.building = building
 
         self.index = index
@@ -143,9 +151,13 @@ class Building(pygame.sprite.Sprite):
 
     def check_input(self) -> None:
         global cookieAmount, cps
-        if pygame.mouse.get_pressed()[0] and self.rect.collidepoint(
-            pygame.mouse.get_pos()
+
+        if (
+            pygame.mouse.get_pressed()[0]
+            and not self.clickState
+            and self.rect.collidepoint(pygame.mouse.get_pos())
         ):
+            self.clickState = True
             if cookieAmount >= self.building["cost"]:
                 cookieAmount -= self.building["cost"]
 
@@ -153,22 +165,31 @@ class Building(pygame.sprite.Sprite):
 
                 self.building["cost"] += self.building["cost"] * 0.15
                 self.building["owned"] += 1
-                # print(self.building["owned"])
+        elif not pygame.mouse.get_pressed()[0]:
+            self.clickState = False
 
     def hover_animation(self) -> None:
-        if (
-            self.image != self.building_states["black"]
-            and self.image != self.building_states["unknown"]
-        ):
+        if self.image != self.building_states["unknown"]:
             if (
                 self.rect.collidepoint(pygame.mouse.get_pos())
                 and pygame.mouse.get_focused()
             ):
-                self.image = self.building_states["highlighted"]
+                if self.image != self.building_states["black"]:
+                    self.image = self.building_states["highlighted"]
                 detailed_info_rect = pygame.rect.Rect(9, self.index * 63 + 30, 252, 50)
+
+                owned_surf = renderCookieFont(f"O: {self.building['owned']}", size=20)
+                owned_rect = owned_surf.get_rect(midleft=(9, self.index * 63 + 40))
+
+                cost_surf = renderCookieFont(
+                    f"C: {formatAmount(self.building['cost'])}", size=20
+                )
+                cost_rect = cost_surf.get_rect(midleft=(9, self.index * 63 + 68))
+
                 pygame.draw.rect(screen, "red", detailed_info_rect)
-            else:
-                self.image = self.building_states["normal"]
+
+                screen.blit(owned_surf, owned_rect)
+                screen.blit(cost_surf, cost_rect)
 
     def isKnown(self) -> None:
         if self.building["cost"] / 1.8 < cookieAmount:
@@ -182,14 +203,85 @@ class Building(pygame.sprite.Sprite):
 
 
 class GoldenCookie(pygame.sprite.Sprite):
-    def __init__(self, type: str = "frenzy") -> None:
+    def __init__(self, cookie) -> None:
         super().__init__()
+
+        self.image = pygame.image.load(
+            "./assets/goldencookies/goldencookie4.png"
+        ).convert_alpha()
+        self.rect = self.image.get_rect(center=(randint(0, WIDTH), randint(0, HEIGHT)))
+
+        self.cookie = cookie
+
+        self.effect_started = -1
+
+        self.countdown_start = time() * 1000
+
+    def check_time_expired(self) -> bool:
+        return (time() * 1000 - self.countdown_start) >= self.cookie[
+            "survival_time"
+        ] * 1000
+
+    def fadeAnimation(self) -> None:
+        secondsLeft = time() * 1000 - self.countdown_start
+        self.image.set_alpha(
+            255 / self.cookie["survival_time"] * (secondsLeft / 1000)
+        )  # calculate opacity based on timeLeft
+
+    def check_effect_expired(self) -> bool:
+        return (time() * 1000 - self.effect_started) > self.cookie[
+            "effect_duration"
+        ] * 1000
+
+    def applyEffect(self, revert: bool = False) -> None:
+        if self.cookie["type"] == gctypes.CFRENZY:
+            global cpc
+            if revert:
+                cpc -= self.boost
+            else:
+                self.boost = cpc * self.cookie["effect_amount"]
+                cpc += self.boost
+
+    def update(self) -> None:
+        if self.effect_started == -1:
+            self.fadeAnimation()
+            if self.check_time_expired():
+                self.kill()
+        if self.effect_started != -1:
+            indcator_surf = pygame.transform.rotozoom(self.image, 0, 0.5)
+            indicator_rect = indcator_surf.get_rect(center=(20, 20))
+
+            secondsLeft_surf = renderCookieFont(
+                f"{int((self.cookie['effect_duration'] - (time() - self.effect_started / 1000)))}",
+                size=12,
+            )
+            secondsLeft_rect = secondsLeft_surf.get_rect(center=(20, 40))
+
+            screen.blit(indcator_surf, indicator_rect)
+            screen.blit(secondsLeft_surf, secondsLeft_rect)
+
+            if self.check_effect_expired():
+                self.applyEffect(revert=True)
+                self.kill()
+
+        elif pygame.mouse.get_pressed()[0] and self.rect.collidepoint(
+            pygame.mouse.get_pos()
+        ):
+            if self.effect_started == -1:
+                self.applyEffect()
+                self.effect_started = time() * 1000
+                self.rect.x = 1000
 
 
 # Groups
 buildings = pygame.sprite.Group()
 for build in builds:
     buildings.add(Building(build, builds.index(build)))
+
+goldCookies = pygame.sprite.Group()
+
+goldCookies.add(GoldenCookie(choice([goldcookies[0]])))
+
 
 # Static Surfaces
 cookie_surface = pygame.image.load("./assets/img/cookie.png").convert_alpha()
@@ -198,11 +290,11 @@ cookie_rect = cookie_surface.get_rect(center=(WIDTH / 2, HEIGHT / 2))
 background_surface = pygame.image.load("./assets/img/background.png").convert()
 background_rect = background_surface.get_rect()
 
-cookieInfo_surface = renderCookieFont(f"{cookieAmount} cookies", True, [255, 255, 255])
+cookieInfo_surface = renderCookieFont(f"{cookieAmount} cookies")
 cookieInfo_rect = cookieInfo_surface.get_rect(midtop=(WIDTH / 2, HEIGHT * 10 / 800))
 pygame.display.set_icon(cookie_surface)
 
-cpsInfo_surface = renderCookieFont(f"{cps}/s", True, [255, 255, 255], 15)
+cpsInfo_surface = renderCookieFont(f"{cps}/s", size=15)
 cpsInfo_rect = cpsInfo_surface.get_rect(midtop=(WIDTH / 2 - 5, HEIGHT * 90 / 800))
 
 # Timers
@@ -225,6 +317,7 @@ while running:
                                 "cpc_multiplier": cpc_multiplier,
                             },
                             "buildings": builds,
+                            "goldcookies": goldcookies,
                             "upgrades": [],
                         },
                         file,
@@ -238,7 +331,7 @@ while running:
                 currentMode = modes.BUILDS
             elif event.key == pygame.K_3:
                 currentMode = modes.UPGRADES
-        if event.type == pygame.MOUSEBUTTONUP:
+        if event.type == pygame.MOUSEBUTTONUP and currentMode == modes.COOKIE:
             if cookie_rect.collidepoint(event.pos):
                 cookieAmount += cpc * cpc_multiplier
                 updateCookieInfo()
@@ -252,6 +345,9 @@ while running:
         screen.blit(cookie_surface, cookie_rect)
         screen.blit(cookieInfo_surface, cookieInfo_rect)
         screen.blit(cpsInfo_surface, cpsInfo_rect)
+
+        goldCookies.draw(screen)
+        goldCookies.update()
 
     elif currentMode == modes.BUILDS:
         screen.fill([130, 130, 130])
@@ -300,7 +396,6 @@ while running:
     elif currentMode == modes.UPGRADES:
         screen.fill([130, 130, 130])
 
-    # print(cps)
     pygame.display.update()
     clock.tick(60)
 

@@ -59,8 +59,8 @@ currentMode = modes.COOKIE
 def renderCookieFont(
     text: str,
     antiAlias: bool = True,
-    color: tuple | list = (255, 255, 255),
-    size: int | float = 25,
+    color: tuple = (255, 255, 255),
+    size: int = 25,
 ) -> pygame.Surface:
     cookieFont = pygame.font.Font("./assets/font/Kavoon-Regular.ttf", int(size))
     return cookieFont.render(str(text), antiAlias, color).convert_alpha()
@@ -206,9 +206,15 @@ class GoldenCookie(pygame.sprite.Sprite):
     def __init__(self, cookie) -> None:
         super().__init__()
 
-        self.image = pygame.image.load(
+        self.image_default = pygame.image.load(
             "./assets/goldencookies/goldencookie4.png"
         ).convert_alpha()
+
+        self.image = self.image_default
+        self.image.set_alpha(0)
+
+        # self.random_coords = (randint(0, WIDTH), randint(0, HEIGHT))
+
         self.rect = self.image.get_rect(center=(randint(0, WIDTH), randint(0, HEIGHT)))
 
         self.cookie = cookie
@@ -217,16 +223,42 @@ class GoldenCookie(pygame.sprite.Sprite):
 
         self.countdown_start = time() * 1000
 
+        self.pauseSeconds = []
+
+        for i in range(self.cookie["static_display_time"]):
+            self.pauseSeconds.append(i + self.cookie["fade_time"])
+
     def check_time_expired(self) -> bool:
-        return (time() * 1000 - self.countdown_start) >= self.cookie[
-            "survival_time"
-        ] * 1000
+        return self.image.get_alpha() < 0
 
     def fadeAnimation(self) -> None:
-        secondsLeft = time() * 1000 - self.countdown_start
-        self.image.set_alpha(
-            255 / self.cookie["survival_time"] * (secondsLeft / 1000)
-        )  # calculate opacity based on timeLeft
+        millisecondsElapsed = time() * 1000 - self.countdown_start
+        millisecondsLeft = (
+            2 * (self.cookie["fade_time"] * 1000)
+            + self.cookie["static_display_time"] * 1000
+        ) - millisecondsElapsed
+
+        if not int(millisecondsElapsed / 1000) in self.pauseSeconds:
+            if millisecondsElapsed / 1000 <= self.cookie["fade_time"]:
+                # self.image = pygame.transform.rotozoom(
+                #     self.image_default,
+                #     0,
+                #     1 / self.cookie["fade_time"] * (millisecondsElapsed / 1000),
+                # )
+                # self.rect = self.image.get_rect(center=self.random_coords)  # approval
+                self.image.set_alpha(
+                    255 / self.cookie["fade_time"] * (millisecondsElapsed / 1000)
+                )
+            else:
+                # self.image = pygame.transform.rotozoom(
+                #     self.image_default,
+                #     0,
+                #     1 / self.cookie["fade_time"] * (millisecondsLeft / 1000),
+                # )
+                # self.rect = self.image.get_rect(center=self.random_coords)  # approval
+                self.image.set_alpha(
+                    255 / self.cookie["fade_time"] * (millisecondsLeft / 1000)
+                )
 
     def check_effect_expired(self) -> bool:
         return (time() * 1000 - self.effect_started) > self.cookie[
@@ -241,6 +273,13 @@ class GoldenCookie(pygame.sprite.Sprite):
             else:
                 self.boost = cpc * self.cookie["effect_amount"]
                 cpc += self.boost
+        elif self.cookie["type"] == gctypes.FRENZY:
+            global cps
+            if revert:
+                cps -= self.boost
+            else:
+                self.boost = cps * self.cookie["effect_amount"]
+                cps += self.boost
 
     def update(self) -> None:
         if self.effect_started == -1:
@@ -248,7 +287,7 @@ class GoldenCookie(pygame.sprite.Sprite):
             if self.check_time_expired():
                 self.kill()
         if self.effect_started != -1:
-            indcator_surf = pygame.transform.rotozoom(self.image, 0, 0.5)
+            indcator_surf = pygame.transform.rotozoom(self.image_default, 0, 0.5)
             indicator_rect = indcator_surf.get_rect(center=(20, 20))
 
             secondsLeft_surf = renderCookieFont(
@@ -279,9 +318,6 @@ for build in builds:
     buildings.add(Building(build, builds.index(build)))
 
 goldCookies = pygame.sprite.Group()
-
-goldCookies.add(GoldenCookie(choice([goldcookies[0]])))
-
 
 # Static Surfaces
 cookie_surface = pygame.image.load("./assets/img/cookie.png").convert_alpha()
@@ -338,6 +374,25 @@ while running:
 
         if event.type == cps_timer:
             cookieAmount += cps * cps_multiplier
+            if randint(1, 60) == 60:
+
+                def goldCookieOfType(type: str = gctypes.FRENZY) -> dict:
+                    return list(filter(lambda gc: gc["type"] == type, goldcookies))[0]
+
+                goldCookies.add(
+                    GoldenCookie(
+                        choice(
+                            [
+                                goldCookieOfType(gctypes.FRENZY),
+                                goldCookieOfType(gctypes.FRENZY),
+                                goldCookieOfType(gctypes.FRENZY),
+                                goldCookieOfType(gctypes.FRENZY),
+                                goldCookieOfType(gctypes.CFRENZY),
+                            ]
+                        )
+                    )
+                )
+                print("spawned gold cookie")
             updateCookieInfo()
 
     if currentMode == modes.COOKIE:

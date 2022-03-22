@@ -10,6 +10,7 @@
 
 ## To Do:
 - [ ] Design the different golden cookie indicator assets
+- [ ] Design hover animation (detailed Info) rectangles on the buildings tab
 - [ ] Scrolling mechanic on the buildings tab
 - [ ] Basic Achievement Logic
 - [ ] Upgrades

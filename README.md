@@ -1,4 +1,4 @@
-# Cookie Clicker replication made by young self-taught programming enthusiasts
+# Cookie Clicker replication
 
 ## Introduction
 

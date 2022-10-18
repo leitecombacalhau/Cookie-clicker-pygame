@@ -2,7 +2,7 @@
 
 ## Introduction
 
-1. The game is programmed in `python` using the `pygame` module. We're **still learning/improving** so don't expect much complexity (or readability) in our code.
+1. The game is programmed in `python` using the `pygame` module. We're **still learning/improving** so don't expect much the best efficiency (or readability) in our code.
 2. The game is based on the original *"Cookie Clicker"*, made by *Orteil* and *Opti*. We may add some new features, but all the logic is **inspired on the original game** (and on the mobile version).
 3. There is a second branch called `beta` which consists of an older and **discontinued version** of the main branch (with the original assets and very few features).
 4. If you have any **suggestions** feel free to contact us and create a pull request.
